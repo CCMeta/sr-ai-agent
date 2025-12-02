@@ -14,6 +14,10 @@ def run(content):
             {'role': 'user', 'content': content}
         ]
     )
-    print(json.dumps(completion.to_dict(), indent=2, ensure_ascii=False))
-    
-    return completion.choices[0].message.content
+    # print(dump(completion))
+    if hasattr(completion, 'error'):
+        return dump(completion)
+    return completion.choices[0].message.content.strip()
+
+def dump(completion):
+    return json.dumps(completion.to_dict(), indent=2, ensure_ascii=False)

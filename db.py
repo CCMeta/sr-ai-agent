@@ -1,29 +1,10 @@
 import sqlite3
 from datetime import datetime
 
-def get():
+def index():
     conn = sqlite3.connect('database.db')
-
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-
-    data = {
-        'hash': 'abc123def456',
-        'status': 0,
-        'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'question': '什么是人工智能？',
-        'answer': '人工智能是模拟人类智能的技术...'
-    }
-
-    cursor.execute("""
-        INSERT INTO topics (hash, status, date, question, answer)
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        data['hash'],
-        data['status'], 
-        data['date'],
-        data['question'],
-        data['answer']
-    ))
 
     cursor.execute("SELECT * FROM topics")
     rows = cursor.fetchall()
@@ -31,3 +12,48 @@ def get():
     conn.commit()
     conn.close()
     return rows
+
+def get(hash: str):
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM topics WHERE hash = ?", (hash,))
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+def update(hash, answer):
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE topics
+        SET status = 1, answer = ?, ai_date = ?
+        WHERE hash = ?
+    """, (
+        answer, 
+        datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
+        hash
+    ))
+
+    conn.commit()
+    conn.close()
+
+def insert(data):
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO topics (hash, date, question)
+        VALUES (?, ?, ?)
+    """, (
+        data['hash'],
+        datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        data['question']
+    ))
+
+    conn.commit()
+    conn.close()
