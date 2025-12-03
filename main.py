@@ -39,13 +39,13 @@ def read_root():
 @app.post("/api/quest")
 def post_quest(hash: str, question: str, tasks: BackgroundTasks, token : str = None):
     # insert into db
-    db.insert({
+    id = db.insert({
         "hash": hash,
         "question": question,
     })
 
     # background task to call ai
-    tasks.add_task(post_ai_queue, hash, question, token)
+    tasks.add_task(post_ai_queue, id, question, token)
 
     # I think domain is dynamic so I should not handle it
     BASE_URL = "http://192.168.3.95:8000"
@@ -63,11 +63,11 @@ def get_quest(hash: str):
 
 
 # post_ai_queue
-def post_ai_queue(hash: str, question: str, token: str = None):
+def post_ai_queue(id: str, question: str, token: str = None):
     answer = ai.run(question, token)
-    print (answer)
+    # print (answer)
     # update db with answer
-    db.update(hash, answer.get("result"), answer.get("status"), answer.get("raw"))
+    db.update(id, answer.get("result"), answer.get("status"), answer.get("raw"))
 
 
 # get_report

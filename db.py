@@ -29,22 +29,22 @@ def get(hash: str):
 
 
 # update
-def update(hash, answer, status, raw):
+def update(id, answer, status, raw):
     conn = apsw.Connection('database.db')
     cursor = conn.cursor()
     cursor.setrowtrace(create_dict_row_factory)
 
-    # This UPDATE will change multiple not just one if hash is not limit 1
+    # This UPDATE will change multiple not just one if id is not limit 1
     cursor.execute("""
         UPDATE topics
         SET status = ?, answer = ?, ai_date = ?, raw_answer = ?
-        WHERE hash = ?
+        WHERE id = ?
     """, (
         status,
         answer,
         datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         raw,
-        hash,
+        id,
     ))
 
     conn.close()
@@ -56,16 +56,20 @@ def insert(data):
     cursor = conn.cursor()
     cursor.setrowtrace(create_dict_row_factory)
 
-    cursor.execute("""
+    result = cursor.execute("""
         INSERT INTO topics (hash, date, question)
         VALUES (?, ?, ?)
+        RETURNING id
     """, (
         data['hash'],
         datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         data['question']
     ))
-
+    inserted_id = result.fetchone().get('id')
     conn.close()
+
+    return inserted_id
+
 
 
 # create_dict_row_factory
