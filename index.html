@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI代码分析</title>
+  <link rel="icon" href="/static/favicon.ico">
   <!-- Bootstrap 5 CSS -->
   <link href="/static/bootstrap.min.css" rel="stylesheet">
   <!-- Highlight.js CSS -->
@@ -80,7 +81,7 @@
             AI分析结果
           </h5>
           <div class="card-body">
-            <p class="card-text markdown-body" id="answer">加载中...</p>
+            <p class="card-text markdown-body" id="answer">Loading...</p>
           </div>
         </div>
 
@@ -89,7 +90,7 @@
             本次提交内容
           </h5>
           <div class="card-body">
-            <p class="card-text" id="question">加载中...</p>
+            <p class="card-text" id="question">Loading...</p>
           </div>
         </div>
 
@@ -145,7 +146,7 @@
             $('#status').html(`<span class="badge badge-status ${statusInfo.class}">${statusInfo.text}</span>`);
 
             // 更新标题
-            document.title = `AI对话 - ${hash}`;
+            document.title = `AI分析 - ${hash}`;
           },
           error: function (xhr) {
             const errorMsg = xhr.status === 404 ? '对话不存在' : '加载失败';
