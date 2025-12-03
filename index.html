@@ -129,7 +129,7 @@
           data: { hash },
           method: 'GET',
           success: function (v) {
-            const data = v.result[0] || {};
+            const data = v.result.at(-1) || {};
             // 填充数据
             $('#hash').text(data.hash || hash);
             $('#id').text(data.id);

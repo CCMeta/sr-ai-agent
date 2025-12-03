@@ -7,5 +7,6 @@ source .venv/bin/activate
 which python
 pip install "fastapi[standard]"
 pip install "openai"
+pip install "apsw"
 fastapi run
 ```

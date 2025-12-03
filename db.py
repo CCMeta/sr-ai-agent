@@ -1,12 +1,12 @@
-import sqlite3
+import apsw
 from datetime import datetime
 
 
 # index
 def index():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
+    conn = apsw.Connection('database.db')
     cursor = conn.cursor()
+    cursor.setrowtrace(create_dict_row_factory)
 
     cursor.execute("SELECT * FROM topics")
     rows = cursor.fetchall()
@@ -18,9 +18,9 @@ def index():
 
 # get
 def get(hash: str):
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
+    conn = apsw.Connection('database.db')
     cursor = conn.cursor()
+    cursor.setrowtrace(create_dict_row_factory)
 
     cursor.execute("SELECT * FROM topics WHERE hash = ?", (hash,))
     rows = cursor.fetchall()
@@ -30,31 +30,31 @@ def get(hash: str):
 
 # update
 def update(hash, answer, status, raw):
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
+    conn = apsw.Connection('database.db')
     cursor = conn.cursor()
+    cursor.setrowtrace(create_dict_row_factory)
 
+    # This UPDATE will change multiple not just one if hash is not limit 1
     cursor.execute("""
         UPDATE topics
         SET status = ?, answer = ?, ai_date = ?, raw_answer = ?
         WHERE hash = ?
     """, (
         status,
-        answer, 
+        answer,
         datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         raw,
         hash,
     ))
 
-    conn.commit()
     conn.close()
 
 
 # insert
 def insert(data):
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
+    conn = apsw.Connection('database.db')
     cursor = conn.cursor()
+    cursor.setrowtrace(create_dict_row_factory)
 
     cursor.execute("""
         INSERT INTO topics (hash, date, question)
@@ -65,5 +65,10 @@ def insert(data):
         data['question']
     ))
 
-    conn.commit()
     conn.close()
+
+
+# create_dict_row_factory
+def create_dict_row_factory(cursor, row):
+    column_names = [description[0] for description in cursor.getdescription()]
+    return dict(zip(column_names, row))
