@@ -29,20 +29,21 @@ def get(hash: str):
 
 
 # update
-def update(hash, answer, status):
+def update(hash, answer, status, raw):
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE topics
-        SET status = ?, answer = ?, ai_date = ?
+        SET status = ?, answer = ?, ai_date = ?, raw_answer = ?
         WHERE hash = ?
     """, (
         status,
         answer, 
-        datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
-        hash
+        datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        raw,
+        hash,
     ))
 
     conn.commit()

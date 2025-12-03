@@ -24,11 +24,13 @@ def run(content, token = None):
         # dump(completion)
         result = completion.choices[0].message.content.strip()
         status = 1
+        raw = dump(completion)
     except Exception as e:
         result = str(e)
         status = 3
+        raw = None
 
-    return {"result": result, "status": status}
+    return {"result": result, "status": status, "raw": raw}
 
 
 # dump

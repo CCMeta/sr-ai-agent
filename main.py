@@ -47,7 +47,11 @@ def post_quest(hash: str, question: str, tasks: BackgroundTasks, token : str = N
     # background task to call ai
     tasks.add_task(post_ai_queue, hash, question, token)
 
-    url = "http://ccmeta.cc:8000/report?hash=" + hash
+    # I think domain is dynamic so I should not handle it
+    BASE_URL = "http://192.168.3.95:8000"
+    # BASE_URL = "http://ccmeta.cc:8000"
+
+    url = BASE_URL + "/report?hash=" + hash
     return {"hash": hash, "question": question, "url": url}
 
 
@@ -61,8 +65,9 @@ def get_quest(hash: str):
 # post_ai_queue
 def post_ai_queue(hash: str, question: str, token: str = None):
     answer = ai.run(question, token)
+    print (answer)
     # update db with answer
-    db.update(hash, answer.get("result"), answer.get("status"))
+    db.update(hash, answer.get("result"), answer.get("status"), answer.get("raw"))
 
 
 # get_report
