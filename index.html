@@ -1,30 +1,29 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-bs-theme="dark">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI对话详情</title>
+  <title>AI代码分析</title>
   <!-- Bootstrap 5 CSS -->
   <link href="/static/bootstrap.min.css" rel="stylesheet">
+  <!-- Highlight.js CSS -->
+  <link rel="stylesheet" href="/static/github-markdown-dark.min.css">
+  <!-- GitHub Dark Theme for Markdown -->
+  <link rel="stylesheet" href="/static/github-dark.min.css">
+
   <style>
     body {
-      background: #f8f9fa;
-      padding-top: 20px;
+      padding: 20px;
+    }
+
+    .markdown-body {
+      background-color: unset;
+      padding: 1rem;
     }
 
     .card {
-      border-radius: 10px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .question-card {
-      border-left: 4px solid #0d6efd;
-    }
-
-    .answer-card {
-      border-left: 4px solid #198754;
-      margin-top: 20px;
     }
 
     .badge-status {
@@ -43,44 +42,57 @@
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-10 col-xl-8">
-        <!-- 头部信息 -->
-        <div class="card mb-4">
+
+        <div class="card mb-4 text-bg-dark">
+          <h5 class="card-header">Change-ID : <span id="hash"></span></h5>
           <div class="card-body">
-            <h4 class="card-title">AI对话详情</h4>
-            <div class="row mt-3">
-              <div class="col-md-3">
-                <small class="text-muted">ID</small>
-                <div class="fw-bold" id="id">-</div>
+            <div class="row">
+              <div class="col-md-3 text-center">
+                <small class=" fw-bold">ID</small>
+                <div>
+                  <span id="id" class="badge badge-status text-bg-light">N/A</span>
+                </div>
               </div>
-              <div class="col-md-3">
-                <small class="text-muted">状态</small>
-                <div id="status"></div>
+              <div class="col-md-3 text-center">
+                <small class=" fw-bold">状态</small>
+                <div id="status">
+                  <span class="badge badge-status text-bg-secondary">N/A</span>
+                </div>
               </div>
-              <div class="col-md-3">
-                <small class="text-muted">提交时间</small>
-                <div id="date">-</div>
+              <div class="col-md-3 text-center">
+                <small class=" fw-bold">提交时间</small>
+                <div>
+                  <span id="date" class="badge badge-status text-bg-warning">N/A</span>
+                </div>
               </div>
-              <div class="col-md-3">
-                <small class="text-muted">AI处理时间</small>
-                <div id="ai_date">-</div>
+              <div class="col-md-3 text-center">
+                <small class=" fw-bold">AI处理时间</small>
+                <div>
+                  <span id="ai_date" class="badge badge-status text-bg-info">N/A</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="card question-card mb-3">
+        <div class="card mb-3 text-bg-dark">
+          <h5 class="card-header bg-success">
+            AI分析结果
+          </h5>
           <div class="card-body">
-            <h5 class="card-title text-primary">本次提交内容</h5>
-            <div class="text-content mt-3" id="question">加载中...</div>
+            <p class="card-text markdown-body" id="answer">加载中...</p>
           </div>
         </div>
 
-        <div class="card answer-card">
+        <div class="card mb-3 text-bg-dark">
+          <h5 class="card-header bg-primary">
+            本次提交内容
+          </h5>
           <div class="card-body">
-            <h5 class="card-title text-success">AI代码分析</h5>
-            <div class="text-content mt-3" id="answer">加载中...</div>
+            <p class="card-text" id="question">加载中...</p>
           </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -89,9 +101,14 @@
   <script src="/static/jquery-3.6.0.min.js"></script>
   <!-- Bootstrap JS -->
   <script src="/static/bootstrap.bundle.min.js"></script>
+  <!-- Marked.js -->
+  <script src="/static/marked.min.js"></script>
+  <!-- Highlight.js -->
+  <script src="/static/highlight.min.js"></script>
 
   <script>
     $(document).ready(function () {
+
       const statusMap = {
         0: { text: '待处理', class: 'bg-primary' },
         1: { text: '已处理', class: 'bg-success' },
@@ -99,33 +116,28 @@
         3: { text: '失败', class: 'bg-danger' }
       };
 
-      function getConversationId() {
-        const path = window.location.pathname;
-        const match = path.match(/\/report\/(\d+)/);
-        if (match)
-          return match[1]
-        return null
-      }
-
       function loadData() {
-        const conversationId = getConversationId();
+        const hash = new URLSearchParams(window.location.search).get('hash')
 
-        if (!conversationId) {
+        if (!hash) {
           $('#question').text('错误：URL中未指定对话ID');
           return;
         }
 
         $.ajax({
-          url: `/api/quest/${conversationId}`,
+          url: `/api/quest`,
+          data: { hash },
           method: 'GET',
           success: function (v) {
             const data = v.result[0] || {};
             // 填充数据
-            $('#id').text(data.hash || conversationId);
-            $('#date').text(data.date);
-            $('#ai_date').text(data.ai_date);
+            $('#hash').text(data.hash || hash);
+            $('#id').text(data.id);
+            $('#date').text(data.date || 'N/A');
+            $('#ai_date').text(data.ai_date || 'N/A');
             $('#question').text(data.question || '');
-            $('#answer').text(data.answer || '');
+            $('#answer').html(marked.parse(data.answer || ''));
+            hljs.highlightAll();
 
             // 设置状态
             const status = data.status || 0;
@@ -133,11 +145,11 @@
             $('#status').html(`<span class="badge badge-status ${statusInfo.class}">${statusInfo.text}</span>`);
 
             // 更新标题
-            document.title = `AI对话 - ${conversationId}`;
+            document.title = `AI对话 - ${hash}`;
           },
           error: function (xhr) {
             const errorMsg = xhr.status === 404 ? '对话不存在' : '加载失败';
-            $('#question').text(`${errorMsg} (ID: ${conversationId})`);
+            $('#question').text(`${errorMsg} (ID: ${hash})`);
           }
         });
       }

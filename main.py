@@ -7,9 +7,13 @@ from fastapi import BackgroundTasks, FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+
+# app
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+# read_root
 @app.get("/")
 def read_root():
     question = "请告诉我当前北京时间"
@@ -30,8 +34,10 @@ def read_root():
         "count": count,
     }
 
+
+# post_quest
 @app.post("/api/quest")
-def post_quest(hash: str, question: str, tasks: BackgroundTasks):
+def post_quest(hash: str, question: str, tasks: BackgroundTasks, token : str = None):
     # insert into db
     db.insert({
         "hash": hash,
@@ -39,22 +45,27 @@ def post_quest(hash: str, question: str, tasks: BackgroundTasks):
     })
 
     # background task to call ai
-    tasks.add_task(post_ai_queue, hash, question)
+    tasks.add_task(post_ai_queue, hash, question, token)
 
-    url = "http://ccmeta.cc:8000/report/" + hash
+    url = "http://ccmeta.cc:8000/report?hash=" + hash
     return {"hash": hash, "question": question, "url": url}
 
-@app.get("/api/quest/{hash}")
+
+# get_quest
+@app.get("/api/quest")
 def get_quest(hash: str):
     result = db.get(hash)
     return {"hash": hash, "result": result}
 
-def post_ai_queue(hash: str, question: str):
-    answer = ai.run(question)
+
+# post_ai_queue
+def post_ai_queue(hash: str, question: str, token: str = None):
+    answer = ai.run(question, token)
     # update db with answer
-    db.update(hash, answer)
+    db.update(hash, answer.get("result"), answer.get("status"))
 
 
-@app.get("/report/{hash}")
+# get_report
+@app.get("/report")
 def get_report(hash: str):
     return FileResponse("index.html")

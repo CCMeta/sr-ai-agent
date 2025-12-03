@@ -1,6 +1,8 @@
 import sqlite3
 from datetime import datetime
 
+
+# index
 def index():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
@@ -13,6 +15,8 @@ def index():
     conn.close()
     return rows
 
+
+# get
 def get(hash: str):
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
@@ -23,16 +27,19 @@ def get(hash: str):
     conn.close()
     return rows
 
-def update(hash, answer):
+
+# update
+def update(hash, answer, status):
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     cursor.execute("""
         UPDATE topics
-        SET status = 1, answer = ?, ai_date = ?
+        SET status = ?, answer = ?, ai_date = ?
         WHERE hash = ?
     """, (
+        status,
         answer, 
         datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
         hash
@@ -41,6 +48,8 @@ def update(hash, answer):
     conn.commit()
     conn.close()
 
+
+# insert
 def insert(data):
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
