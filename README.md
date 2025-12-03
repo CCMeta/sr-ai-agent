@@ -9,4 +9,6 @@ pip install "fastapi[standard]"
 pip install "openai"
 pip install "apsw"
 fastapi run
+
+nohup fastapi run --reload &
 ```
