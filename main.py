@@ -13,26 +13,37 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-# read_root
+# index_root
 @app.get("/")
-def read_root():
-    question = "请告诉我当前北京时间"
-    # use python to print current time
+def index_root():
+    return FileResponse("index.html")
 
-    answer = question
-    count = len(db.index())
 
-    start_time = datetime.datetime.now()
-    # answer = ai.run(question)
-    end_time = datetime.datetime.now()
-    duration = (end_time - start_time).total_seconds()
-    
-    return {
-        "duration": duration,
-        "content": question,
-        "Answer": answer,
-        "count": count,
-    }
+# get_report
+@app.get("/report")
+def get_report(hash: str):
+    return FileResponse("report.html")
+
+
+# index_status
+@app.get("/api/stats")
+def index_status():
+    print(db.count_all_status())
+    return { "stats": db.count_all_status(), "code": 200 }
+
+
+# index_quest
+@app.get("/api/quest/index")
+def index_quest():
+    result = db.index()
+    return { "topics": result, "code": 200 }
+
+
+# get_quest
+@app.get("/api/quest")
+def get_quest(hash: str):
+    result = db.get(hash)
+    return {"hash": hash, "result": result}
 
 
 # post_quest
@@ -55,22 +66,9 @@ def post_quest(hash: str, question: str, tasks: BackgroundTasks, token : str = N
     return {"hash": hash, "question": question, "url": url}
 
 
-# get_quest
-@app.get("/api/quest")
-def get_quest(hash: str):
-    result = db.get(hash)
-    return {"hash": hash, "result": result}
-
-
 # post_ai_queue
 def post_ai_queue(id: str, question: str, token: str = None):
     answer = ai.run(question, token)
     # print (answer)
     # update db with answer
     db.update(id, answer.get("result"), answer.get("status"), answer.get("raw"))
-
-
-# get_report
-@app.get("/report")
-def get_report(hash: str):
-    return FileResponse("index.html")

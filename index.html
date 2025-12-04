@@ -4,37 +4,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI代码分析</title>
+  <title>AI 分析统计首页</title>
   <link rel="icon" href="/static/favicon.ico">
-  <!-- Bootstrap 5 CSS -->
+  <!-- Bootstrap 5 CSS (与 index.html 保持一致) -->
   <link href="/static/bootstrap.min.css" rel="stylesheet">
-  <!-- Highlight.js CSS -->
-  <link rel="stylesheet" href="/static/github-markdown-dark.min.css">
-  <!-- GitHub Dark Theme for Markdown -->
-  <link rel="stylesheet" href="/static/github-dark.min.css">
 
   <style>
     body {
       padding: 20px;
-    }
-
-    .markdown-body {
-      background-color: unset;
-      padding: 1rem;
+      /* 保持与 index.html 相似的暗色背景 */
+      background-color: #212529;
     }
 
     .card {
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      /* 继承 index.html 的卡片阴影和暗色主题 */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.2s;
     }
 
-    .badge-status {
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .status-badge {
       font-size: 0.9em;
       padding: 6px 12px;
+      border-radius: 0.5rem;
     }
 
-    .text-content {
-      white-space: pre-wrap;
-      line-height: 1.6;
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+
+    .loading-placeholder {
+      animation: pulse 1.5s infinite ease-in-out;
+      background-color: #495057;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 0.8;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+
+      100% {
+        opacity: 0.8;
+      }
+    }
+
+    .table th,
+    .table td {
+      text-align: center;
+    }
+
+    .table a {
+      text-decoration: none;
+    }
+
+    .table a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -42,125 +77,238 @@
 <body>
   <div class="container">
     <div class="row justify-content-center">
-      <div class="col-lg-10 col-xl-8">
+      <div class="col-lg-12">
 
-        <div class="card mb-4 text-bg-dark">
-          <h5 class="card-header">Change-ID : <span id="hash"></span></h5>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-3 text-center">
-                <small class="fw-bold">状态</small>
-                <div id="status">
-                  <span class="badge badge-status text-bg-secondary">N/A</span>
-                </div>
-              </div>
-              <div class="col-md-3 text-center">
-                <small class="fw-bold">提交时间</small>
-                <div>
-                  <span id="date" class="badge badge-status text-bg-warning">N/A</span>
-                </div>
-              </div>
-              <div class="col-md-3 text-center">
-                <small class="fw-bold">Token消耗</small>
-                <div>
-                  <span id="token" class="badge badge-status text-bg-light">N/A</span>
-                </div>
-              </div>
-              <div class="col-md-3 text-center">
-                <small class="fw-bold">AI处理时间</small>
-                <div>
-                  <span id="ai_date" class="badge badge-status text-bg-info">N/A</span>
-                </div>
-              </div>
+        <header class="text-center mb-5 text-white">
+          <h1 class="display-5 fw-bold">AI 代码分析任务仪表盘</h1>
+          <p class="lead text-secondary">实时查看任务处理状态和统计信息</p>
+        </header>
+
+        <!-- 统计卡片区域 -->
+        <div id="stats-container" class="row g-4 mb-5">
+          <!-- 骨架屏占位符 -->
+          <div class="col-md-3">
+            <div class="card text-bg-dark text-center h-100 p-4">
+              <div class="card-title fw-bold">总任务数</div>
+              <div class="stat-value text-white loading-placeholder w-50 mx-auto" style="height: 40px;"></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-bg-dark text-center h-100 p-4">
+              <div class="card-title fw-bold">已处理</div>
+              <div class="stat-value text-white loading-placeholder w-50 mx-auto" style="height: 40px;"></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-bg-dark text-center h-100 p-4">
+              <div class="card-title fw-bold">待处理</div>
+              <div class="stat-value text-white loading-placeholder w-50 mx-auto" style="height: 40px;"></div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-bg-dark text-center h-100 p-4">
+              <div class="card-title fw-bold">处理失败</div>
+              <div class="stat-value text-white loading-placeholder w-50 mx-auto" style="height: 40px;"></div>
             </div>
           </div>
         </div>
 
-        <div class="card mb-3 text-bg-dark">
-          <h5 class="card-header bg-success">
-            AI分析结果
+        <!-- 详细列表区域 -->
+        <div class="card text-bg-dark p-0">
+          <h5 class="card-header bg-primary text-center">
+            最近任务列表
           </h5>
-          <div class="card-body">
-            <p class="card-text markdown-body" id="answer">Loading...</p>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-dark table-striped table-hover m-0">
+                <thead>
+                  <tr>
+                    <th scope="col text-center">Change-ID</th>
+                    <th scope="col">状态</th>
+                    <th scope="col">提交时间</th>
+                    <th scope="col">AI 处理时间</th>
+                  </tr>
+                </thead>
+                <tbody id="topics-list">
+                  <!-- Data will be loaded here -->
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-
-        <div class="card mb-3 text-bg-dark">
-          <h5 class="card-header bg-primary">
-            本次提交内容
-          </h5>
-          <pre class="card-body language-diff">
-            <code class="card-text language-diff" id="question"
-            style="white-space: pre-wrap;">Loading...</code>
-          </pre>
+          <div id="list-loading" class="text-center p-4 text-secondary">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> 正在加载数据...
+          </div>
+          <div id="list-empty" class="text-center p-4 text-secondary d-none">
+            <span class="me-2">📦</span> 暂无任务记录。
+          </div>
+          <div id="list-error" class="text-center p-4 text-danger d-none">
+            <span class="me-2">⚠️</span> 数据加载失败，请检查 API。
+          </div>
         </div>
 
       </div>
     </div>
   </div>
 
-  <!-- jQuery -->
+  <!-- jQuery (与 index.html 保持一致) -->
   <script src="/static/jquery-3.6.0.min.js"></script>
-  <!-- Bootstrap JS -->
+  <!-- Bootstrap JS (与 index.html 保持一致) -->
   <script src="/static/bootstrap.bundle.min.js"></script>
-  <!-- Marked.js -->
-  <script src="/static/marked.min.js"></script>
-  <!-- Highlight.js -->
-  <script src="/static/highlight.min.js"></script>
 
   <script>
-    $(document).ready(function () {
+    // Constants and Utility Functions
+    const API_ENDPOINT = '/api/stats'; // 假设用于统计数据的 API
+    const LIST_ENDPOINT = '/api/quest/index'; // 假设用于获取最新列表的 API
+    const DETAIL_PAGE = '/report'; // 报告页面的文件名
 
-      const statusMap = {
-        0: { text: '待处理', class: 'bg-primary' },
-        1: { text: '已处理', class: 'bg-success' },
-        2: { text: '处理中', class: 'bg-warning' },
-        3: { text: '失败', class: 'bg-danger' }
-      };
+    // Status mapping for visual styles (与 index.html 保持一致)
+    const statusMap = {
+      0: { text: '待处理', class: 'text-bg-primary' },
+      1: { text: '已处理', class: 'text-bg-success' },
+      2: { text: '处理中', class: 'text-bg-warning' },
+      3: { text: '失败', class: 'text-bg-danger' }
+    };
 
-      function loadData() {
-        const hash = new URLSearchParams(window.location.search).get('hash')
+    /**
+     * Renders the statistical data cards.
+     * @param {Object} stats - The statistics object from API.
+     */
+    function renderStats(data) {
+      const container = $('#stats-container');
+      container.empty();
 
-        if (!hash) {
-          $('#question').text('错误：URL中未指定对话ID');
-          return;
-        }
 
-        $.ajax({
-          url: `/api/quest`,
-          data: { hash },
-          method: 'GET',
-          success: function (v) {
-            const data = v.result.at(-1) || {};
-            data.token = JSON.parse(data.raw_answer)?.usage?.total_tokens;
+      const stats = data.reduce((acc, { status, count }) => {
+        acc.total = (acc.total || 0) + count;
+        if (status === 0) acc.pending = count;
+        if (status === 1) acc.completed = count;
+        if (status === 3) acc.failed = count;
+        return acc;
+      }, { total: 0, completed: 0, pending: 0, failed: 0 });
 
-            // 填充数据
-            $('#hash').text(data.hash || hash);
-            $('#token').text(data.token || 'N/A');
-            $('#date').text(data.date || 'N/A');
-            $('#ai_date').text(data.ai_date || 'N/A');
-            $('#question').text(data.question || '');
-            $('#answer').html(marked.parse(data.answer || ''));
-            hljs.highlightAll();
+      const statsData = [
+        { title: '总任务数', value: stats.total || 0, colorClass: 'text-bg-info' },
+        { title: '已处理', value: stats.completed || 0, colorClass: 'text-bg-success' },
+        { title: '待处理', value: stats.pending || 0, colorClass: 'text-bg-warning' },
+        { title: '处理失败', value: stats.failed || 0, colorClass: 'text-bg-danger' }
+      ];
 
-            // 设置状态
-            const status = data.status || 0;
-            const statusInfo = statusMap[status] || statusMap[0];
-            $('#status').html(`<span class="badge badge-status ${statusInfo.class}">${statusInfo.text}</span>`);
+      statsData.forEach(stat => {
+        container.append(`
+          <div class="col-md-3">
+              <div class="card ${stat.colorClass} text-center h-100 p-4">
+                  <div class="card-title fw-bold">${stat.title}</div>
+                  <div class="stat-value text-white">${stat.value}</div>
+              </div>
+          </div>
+        `);
+      });
+    }
 
-            // 更新标题
-            document.title = `AI分析 - ${hash}`;
-          },
-          error: function (xhr) {
-            const errorMsg = xhr.status === 404 ? '对话不存在' : '加载失败';
-            $('#question').text(`${errorMsg} (ID: ${hash})`);
-          }
-        });
+    /**
+     * Renders the recent topics list.
+     * @param {Array<Object>} topics - Array of topic objects.
+     */
+    function renderTopics(topics) {
+      console.info("Rendering topics:", topics);
+      const listBody = $('#topics-list');
+      listBody.empty();
+
+      if (topics.length === 0) {
+        $('#list-empty').removeClass('d-none');
+        return;
       }
 
-      // 页面加载完成后执行
-      loadData();
-    });
+      topics.forEach(topic => {
+        const info = statusMap[topic.status] || statusMap[0];
+        listBody.append(`
+          <tr>
+            <td>
+              <a target="_blank" href="${DETAIL_PAGE}?hash=${topic.hash}" class="text-info fw-bold">${topic.hash}</a>
+            </td>
+            <td>
+              <span class="badge status-badge ${info.class}">
+                ${info.text}
+              </span>
+            </td>
+            <td class="align-middle text-secondary">${topic.date || 'N/A'}</td>
+            <td class="align-middle text-secondary">${topic.ai_date || 'N/A'}</td>
+          </tr>
+        `);
+      });
+    }
+
+    /**
+     * Fetches data from the API with exponential backoff using jQuery AJAX.
+     * @param {string} url - The API endpoint URL.
+     * @param {number} retries - Number of retries left.
+     * @param {number} delay - Current delay for backoff.
+     * @returns {Promise<Object>}
+     */
+    async function fetchData(url, retries = 3, delay = 1000) {
+      return new Promise((resolve, reject) => {
+        const attemptFetch = (currentRetries, currentDelay) => {
+          $.ajax({
+            url: url,
+            method: 'GET',
+            dataType: 'json',
+            success: resolve,
+            error: (xhr, status, error) => {
+              if (currentRetries > 0) {
+                // console.log(`Fetch failed for ${url}. Retrying in ${currentDelay / 1000}s...`);
+                setTimeout(() => {
+                  attemptFetch(currentRetries - 1, currentDelay * 2);
+                }, currentDelay);
+              } else {
+                reject(new Error(`Fetch failed for ${url}: ${error}`));
+              }
+            }
+          });
+        };
+        attemptFetch(retries, delay);
+      });
+    }
+
+    /**
+     * Main function to load all dashboard data.
+     */
+    async function loadDashboard() {
+      // 1. Load Statistics
+      try {
+        const statsData = await fetchData(API_ENDPOINT);
+        // Assuming API returns { stats: { ... } }
+        renderStats(statsData.stats || {});
+      } catch (e) {
+        // console.error("Failed to load statistics:", e);
+        $('#stats-container').html(`
+          <div class="col-12">
+            <div class="alert alert-danger text-center" role="alert">
+              统计数据加载失败，请检查后端服务 (${API_ENDPOINT})。
+            </div>
+          </div>
+        `);
+      }
+
+      // 2. Load Recent Topics List
+      $('#list-loading').removeClass('d-none');
+      $('#list-empty').addClass('d-none');
+      $('#list-error').addClass('d-none');
+
+      try {
+        const listData = await fetchData(LIST_ENDPOINT);
+        // Assuming API returns { topics: [ ... ] }
+        renderTopics(listData.topics || []);
+      } catch (e) {
+        // console.error("Failed to load topics list:", e);
+        $('#topics-list').empty();
+        $('#list-error').removeClass('d-none');
+      } finally {
+        $('#list-loading').addClass('d-none');
+      }
+    }
+
+    // Initialize the dashboard on window load
+    $(document).ready(loadDashboard);
   </script>
 </body>
 

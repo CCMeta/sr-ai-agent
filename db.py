@@ -8,13 +8,27 @@ def index():
     cursor = conn.cursor()
     cursor.setrowtrace(create_dict_row_factory)
 
-    cursor.execute("SELECT * FROM topics")
+    cursor.execute("SELECT * FROM topics ORDER BY id DESC LIMIT 50")
     rows = cursor.fetchall()
 
-    conn.commit()
     conn.close()
     return rows
 
+
+# count all status
+def count_all_status():
+    conn = apsw.Connection('database.db')
+    cursor = conn.cursor()
+    cursor.setrowtrace(create_dict_row_factory)
+
+    cursor.execute("""
+        SELECT status, COUNT(*) as count
+        FROM topics
+        GROUP BY status
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
 
 # get
 def get(hash: str):
