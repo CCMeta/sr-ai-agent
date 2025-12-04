@@ -49,25 +49,25 @@
           <div class="card-body">
             <div class="row">
               <div class="col-md-3 text-center">
-                <small class=" fw-bold">ID</small>
-                <div>
-                  <span id="id" class="badge badge-status text-bg-light">N/A</span>
-                </div>
-              </div>
-              <div class="col-md-3 text-center">
-                <small class=" fw-bold">状态</small>
+                <small class="fw-bold">状态</small>
                 <div id="status">
                   <span class="badge badge-status text-bg-secondary">N/A</span>
                 </div>
               </div>
               <div class="col-md-3 text-center">
-                <small class=" fw-bold">提交时间</small>
+                <small class="fw-bold">提交时间</small>
                 <div>
                   <span id="date" class="badge badge-status text-bg-warning">N/A</span>
                 </div>
               </div>
               <div class="col-md-3 text-center">
-                <small class=" fw-bold">AI处理时间</small>
+                <small class="fw-bold">Token消耗</small>
+                <div>
+                  <span id="token" class="badge badge-status text-bg-light">N/A</span>
+                </div>
+              </div>
+              <div class="col-md-3 text-center">
+                <small class="fw-bold">AI处理时间</small>
                 <div>
                   <span id="ai_date" class="badge badge-status text-bg-info">N/A</span>
                 </div>
@@ -131,9 +131,11 @@
           method: 'GET',
           success: function (v) {
             const data = v.result.at(-1) || {};
+            data.token = JSON.parse(data.raw_answer)?.usage?.total_tokens;
+
             // 填充数据
             $('#hash').text(data.hash || hash);
-            $('#id').text(data.id);
+            $('#token').text(data.token || 'N/A');
             $('#date').text(data.date || 'N/A');
             $('#ai_date').text(data.ai_date || 'N/A');
             $('#question').text(data.question || '');
