@@ -258,7 +258,7 @@
      * @param {number} delay - Current delay for backoff.
      * @returns {Promise<Object>}
      */
-    async function fetchData(url, retries = 3, delay = 1000) {
+    async function fetchData(url, retries = 1, delay = 1000) {
       return new Promise((resolve, reject) => {
         const attemptFetch = (currentRetries, currentDelay) => {
           $.ajax({
@@ -312,7 +312,7 @@
         // Assuming API returns { topics: [ ... ] }
         renderTopics(listData.topics || []);
       } catch (e) {
-        // console.error("Failed to load topics list:", e);
+        console.error("Failed to load topics list:", e);
         $('#topics-list').empty();
         $('#list-error').removeClass('d-none');
       } finally {
