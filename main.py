@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 # app
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+print("SQLite version:", db.get_sqlite_version())
 
 
 # index_root

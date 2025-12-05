@@ -1,55 +1,58 @@
 import apsw
+import threading
 from datetime import datetime
 
 
+_local = threading.local()
+
+
+# get sqlite version
+def get_sqlite_version():
+    return apsw.sqlitelibversion()
+
+
+def db() -> apsw.Connection:
+    if not hasattr(_local, 'cursor'):
+        conn = apsw.Connection('database.db')
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA journal_mode = WAL")
+        cursor.execute("PRAGMA synchronous = NORMAL")
+        cursor.execute("PRAGMA read_uncommitted = 1")
+        cursor.setrowtrace(create_dict_row_factory)
+        # _local.connection = conn
+        _local.cursor = cursor
+    return _local.cursor
+
 # index
 def index():
-    conn = apsw.Connection('database.db')
-    cursor = conn.cursor()
-    cursor.setrowtrace(create_dict_row_factory)
-
-    cursor.execute("SELECT * FROM topics ORDER BY id DESC LIMIT 50")
-    rows = cursor.fetchall()
-
-    conn.close()
+    db().execute("SELECT * FROM topics ORDER BY id DESC LIMIT 50")
+    rows = db().fetchall()
     return rows
 
 
 # count all status
 def count_all_status():
-    conn = apsw.Connection('database.db')
-    cursor = conn.cursor()
-    cursor.setrowtrace(create_dict_row_factory)
 
-    cursor.execute("""
+    db().execute("""
         SELECT status, COUNT(*) as count
         FROM topics
         GROUP BY status
     """)
-    rows = cursor.fetchall()
-    conn.close()
+    rows = db().fetchall()
     return rows
 
 # get
 def get(hash: str):
-    conn = apsw.Connection('database.db')
-    cursor = conn.cursor()
-    cursor.setrowtrace(create_dict_row_factory)
-
-    cursor.execute("SELECT * FROM topics WHERE hash = ?", (hash,))
-    rows = cursor.fetchall()
-    conn.close()
+    db().execute("SELECT * FROM topics WHERE hash = ?", (hash,))
+    rows = db().fetchall()
     return rows
 
 
 # update
 def update(id, answer, status, raw):
-    conn = apsw.Connection('database.db')
-    cursor = conn.cursor()
-    cursor.setrowtrace(create_dict_row_factory)
 
     # This UPDATE will change multiple not just one if id is not limit 1
-    cursor.execute("""
+    db().execute("""
         UPDATE topics
         SET status = ?, answer = ?, ai_date = ?, raw_answer = ?
         WHERE id = ?
@@ -60,17 +63,13 @@ def update(id, answer, status, raw):
         raw,
         id,
     ))
-
-    conn.close()
+    return True
 
 
 # insert
 def insert(data):
-    conn = apsw.Connection('database.db')
-    cursor = conn.cursor()
-    cursor.setrowtrace(create_dict_row_factory)
 
-    result = cursor.execute("""
+    result = db().execute("""
         INSERT INTO topics (hash, date, question)
         VALUES (?, ?, ?)
         RETURNING id
@@ -80,8 +79,6 @@ def insert(data):
         data['question']
     ))
     inserted_id = result.fetchone().get('id')
-    conn.close()
-
     return inserted_id
 
 
