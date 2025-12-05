@@ -28,7 +28,6 @@ def get_report(hash: str):
 # index_status
 @app.get("/api/stats")
 def index_status():
-    print(db.count_all_status())
     return { "stats": db.count_all_status(), "code": 200 }
 
 
@@ -69,6 +68,5 @@ def post_quest(hash: str, question: str, tasks: BackgroundTasks, token : str = N
 # post_ai_queue
 def post_ai_queue(id: str, question: str, token: str = None):
     answer = ai.run(question, token)
-    # print (answer)
     # update db with answer
     db.update(id, answer.get("result"), answer.get("status"), answer.get("raw"))

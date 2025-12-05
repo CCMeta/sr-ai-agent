@@ -12,15 +12,12 @@
   <style>
     body {
       padding: 20px;
-      /* 保持与 index.html 相似的暗色背景 */
       background-color: #212529;
     }
 
     .card {
-      /* 继承 index.html 的卡片阴影和暗色主题 */
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: transform 0.2s;
     }
 
     .card:hover {
@@ -127,6 +124,8 @@
                     <th scope="col">状态</th>
                     <th scope="col">提交时间</th>
                     <th scope="col">AI 处理时间</th>
+                    <th scope="col">AI 处理耗时</th>
+                    <th scope="col">Token 消耗</th>
                   </tr>
                 </thead>
                 <tbody id="topics-list">
@@ -187,7 +186,7 @@
       }, { total: 0, completed: 0, pending: 0, failed: 0 });
 
       const statsData = [
-        { title: '总任务数', value: stats.total || 0, colorClass: 'text-bg-info' },
+        { title: '总任务数', value: stats.total || 0, colorClass: 'text-bg-primary' },
         { title: '已处理', value: stats.completed || 0, colorClass: 'text-bg-success' },
         { title: '待处理', value: stats.pending || 0, colorClass: 'text-bg-warning' },
         { title: '处理失败', value: stats.failed || 0, colorClass: 'text-bg-danger' }
@@ -197,7 +196,7 @@
         container.append(`
           <div class="col-md-3">
               <div class="card ${stat.colorClass} text-center h-100 p-4">
-                  <div class="card-title fw-bold">${stat.title}</div>
+                  <div class="card-title fw-bold text-white">${stat.title}</div>
                   <div class="stat-value text-white">${stat.value}</div>
               </div>
           </div>
@@ -220,19 +219,33 @@
       }
 
       topics.forEach(topic => {
-        const info = statusMap[topic.status] || statusMap[0];
+        const status = statusMap[topic.status] || statusMap[0];
+        if (topic.date && topic.ai_date) {
+          topic.token = JSON.parse(topic.raw_answer)?.usage?.total_tokens;
+          topic.duration = (new Date(topic.ai_date) - new Date(topic.date)) / 1000;
+        }
+
         listBody.append(`
           <tr>
             <td>
               <a target="_blank" href="${DETAIL_PAGE}?hash=${topic.hash}" class="text-info fw-bold">${topic.hash}</a>
             </td>
             <td>
-              <span class="badge status-badge ${info.class}">
-                ${info.text}
+              <span class="badge status-badge ${status.class}">
+                ${status.text}
               </span>
             </td>
             <td class="align-middle text-secondary">${topic.date || 'N/A'}</td>
             <td class="align-middle text-secondary">${topic.ai_date || 'N/A'}</td>
+            <td class="align-middle text-secondary">
+                <span id="token" class="badge status-badge text-bg-secondary">
+                  ${topic.duration || 'N/A'}
+                </span>
+            <td class="align-middle text-secondary">
+                <span id="token" class="badge status-badge text-bg-secondary">
+                  ${topic.token || 'N/A'}
+                </span>
+              </td>
           </tr>
         `);
       });
